@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Монитор статусов</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ececec;
+      color: #222;
+    }
+
+    .wrapper {
+      max-width: 560px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 14px 0;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      margin: 0 0 14px 0;
+      color: #444;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .status-btn {
+      border: none;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .status-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    .study {
+      background: #28a745;
+    }
+
+    .coffee {
+      background: #f4b400;
+      color: #222;
+    }
+
+    .game {
+      background: #1aa6b7;
+    }
+
+    .home {
+      background: #6c757d;
+    }
+
+    .group-title {
+      font-size: 21px;
+      font-weight: 700;
+      margin: 0 0 14px 0;
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #ddd;
+      flex-shrink: 0;
+    }
+
+    .avatar-fallback {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #d9d9d9;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .username {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .status-line {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 7px;
+      vertical-align: middle;
+    }
+
+    .status-online {
+      background: #28a745;
+    }
+
+    .status-studying {
+      background: #28a745;
+    }
+
+    .status-coffee {
+      background: #f4b400;
+    }
+
+    .status-game {
+      background: #1aa6b7;
+    }
+
+    .status-home {
+      background: #6c757d;
+    }
+
+    .status-default {
+      background: #999;
+    }
+
+    .muted {
+      color: #888;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #b00020;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 520px) {
+      .title, .group-title {
+        font-size: 20px;
+      }
+
+      .status-btn {
+        font-size: 14px;
+        padding: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <h1 class="title">Мой профиль</h1>
+      <p class="subtitle">Вы зашли как: <span id="my-name">Загрузка...</span></p>
+
+      <div class="status-grid">
+        <button class="status-btn study" onclick="updateStatus('Studying')">👨‍🎓 Учусь</button>
+        <button class="status-btn coffee" onclick="updateStatus('Coffee-break')">☕ Кофе</button>
+        <button class="status-btn game" onclick="updateStatus('Gaming')">🎮 В игре</button>
+        <button class="status-btn home" onclick="updateStatus('At home')">🏠 Дома</button>
+      </div>
+
+      <div id="message" class="muted" style="margin-top: 12px;"></div>
+      <div id="error" class="error"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="group-title">Монитор группы</h2>
+      <div id="users" class="user-list">
+        <div class="muted">Загрузка списка...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
+    const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657"e;
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const myNameEl = document.getElementById('my-name');
+    const usersEl = document.getElementById('users');
+    const messageEl = document.getElementById('message');
+    const errorEl = document.getElementById('error');
+
+    function getStatusText(status) {
+      switch (status) {
+        case 'Studying':
+          return 'Учится';
+        case 'Coffee-break':
+          return 'Кофе-брейк';
+        case 'Gaming':
+          return 'В игре';
+        case 'At home':
+          return 'Дома';
+        case 'Online':
+          return 'Онлайн';
+        default:
+          return status || 'Без статуса';
+      }
+    }
+
+    function getStatusClass(status) {
+      switch (status) {
+        case 'Studying':
+          return 'status-studying';
+        case 'Coffee-break':
+          return 'status-coffee';
+        case 'Gaming':
+          return 'status-game';
+        case 'At home':
+          return 'status-home';
+        case 'Online':
+          return 'status-online';
+        default:
+          return 'status-default';
+      }
+    }
+
+    function renderAvatar(user) {
+      if (user.avatar_url) {
+        return `<img class="avatar" src="${user.avatar_url}" alt="${user.username}" />`;
+      }
+      return `<div class="avatar-fallback">👤</div>`;
+    }
+
+    function renderUsers(list) {
+      if (!list || list.length === 0) {
+        usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
+        return;
+      }
+
+      usersEl.innerHTML = list.map(user => `
+        <div class="user-row">
+          ${renderAvatar(user)}
+          <div class="user-info">
+            <div class="username">${user.username || 'Без имени'}</div>
+            <div class="status-line">
+              <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadUsers() {
+      errorEl.textContent = '';
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('username', { ascending: true });
+
+      if (error) {
+        console.error(error);
+        errorEl.textContent = 'Ошибка загрузки данных из Supabase';
+        return;
+      }
+
+      renderUsers(data);
+
+      const me = data.find(user => user.id === MY_ID);
+      if (me) {
+        myNameEl.textContent = me.username;
+      } else {
+        myNameEl.textContent = 'Пользователь не найден';
+      }
+    }
+
+    async function updateStatus(newStatus) {
+      errorEl.textContent = '';
+      messageEl.textContent = 'Обновляю статус...';
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .eq('id', MY_ID);
+
+      if (error) {
+        console.error(error);
+        errorEl.textContent = 'Ошибка обновления статуса';
+        messageEl.textContent = '';
+        return;
+      }
+
+      messageEl.textContent = 'Статус обновлён';
+      await loadUsers();
+    }
+
+    function enableRealtime() {
+      supabase
+        .channel('profiles-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profiles'
+          },
+          () => {
+            loadUsers();
+          }
+        )
+        .subscribe();
+    }
+
+    loadUsers();
+    enableRealtime();
+  </script>
+</body>
+</html>
