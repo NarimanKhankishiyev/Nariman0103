@@ -296,7 +296,7 @@
       errorEl.textContent = '';
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('Тейбл')
         .select('*')
         .order('username', { ascending: true });
 
