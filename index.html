@@ -221,140 +221,140 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
-const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
-const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
+  const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
+  const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const myNameEl = document.getElementById('my-name');
-    const usersEl = document.getElementById('users');
-    const messageEl = document.getElementById('message');
-    const errorEl = document.getElementById('error');
+  const myNameEl = document.getElementById('my-name');
+  const usersEl = document.getElementById('users');
+  const messageEl = document.getElementById('message');
+  const errorEl = document.getElementById('error');
 
-    function getStatusText(status) {
-      switch (status) {
-        case 'Studying':
-          return 'Учится';
-        case 'Coffee-break':
-          return 'Кофе-брейк';
-        case 'Gaming':
-          return 'В игре';
-        case 'At home':
-          return 'Дома';
-        case 'Online':
-          return 'Онлайн';
-        default:
-          return status || 'Без статуса';
-      }
+  function getStatusText(status) {
+    switch (status) {
+      case 'Studying':
+        return 'Учится';
+      case 'Coffee-break':
+        return 'Кофе-брейк';
+      case 'Gaming':
+        return 'В игре';
+      case 'At home':
+        return 'Дома';
+      case 'Online':
+        return 'Онлайн';
+      default:
+        return status || 'Без статуса';
+    }
+  }
+
+  function getStatusClass(status) {
+    switch (status) {
+      case 'Studying':
+        return 'status-studying';
+      case 'Coffee-break':
+        return 'status-coffee';
+      case 'Gaming':
+        return 'status-game';
+      case 'At home':
+        return 'status-home';
+      case 'Online':
+        return 'status-online';
+      default:
+        return 'status-default';
+    }
+  }
+
+  function renderAvatar(user) {
+    if (user.avatar_url) {
+      return `<img class="avatar" src="${user.avatar_url}" alt="${user.username}" />`;
+    }
+    return `<div class="avatar-fallback">👤</div>`;
+  }
+
+  function renderUsers(list) {
+    if (!list || list.length === 0) {
+      usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
+      return;
     }
 
-    function getStatusClass(status) {
-      switch (status) {
-        case 'Studying':
-          return 'status-studying';
-        case 'Coffee-break':
-          return 'status-coffee';
-        case 'Gaming':
-          return 'status-game';
-        case 'At home':
-          return 'status-home';
-        case 'Online':
-          return 'status-online';
-        default:
-          return 'status-default';
-      }
-    }
-
-    function renderAvatar(user) {
-      if (user.avatar_url) {
-        return `<img class="avatar" src="${user.avatar_url}" alt="${user.username}" />`;
-      }
-      return `<div class="avatar-fallback">👤</div>`;
-    }
-
-    function renderUsers(list) {
-      if (!list || list.length === 0) {
-        usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
-        return;
-      }
-
-      usersEl.innerHTML = list.map(user => `
-        <div class="user-row">
-          ${renderAvatar(user)}
-          <div class="user-info">
-            <div class="username">${user.username || 'Без имени'}</div>
-            <div class="status-line">
-              <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
-            </div>
+    usersEl.innerHTML = list.map(user => `
+      <div class="user-row">
+        ${renderAvatar(user)}
+        <div class="user-info">
+          <div class="username">${user.username || 'Без имени'}</div>
+          <div class="status-line">
+            <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
           </div>
         </div>
-      `).join('');
+      </div>
+    `).join('');
+  }
+
+  async function loadUsers() {
+    errorEl.textContent = '';
+
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .order('username', { ascending: true });
+
+    if (error) {
+      console.error(error);
+      errorEl.textContent = 'Ошибка загрузки данных из Supabase';
+      return;
     }
 
-    async function loadUsers() {
-      errorEl.textContent = '';
+    renderUsers(data);
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('username', { ascending: true });
+    const me = data.find(user => user.id === MY_ID);
+    if (me) {
+      myNameEl.textContent = me.username;
+    } else {
+      myNameEl.textContent = 'Пользователь не найден';
+    }
+  }
 
-      if (error) {
-        console.error(error);
-        errorEl.textContent = 'Ошибка загрузки данных из Supabase';
-        return;
-      }
+  async function updateStatus(newStatus) {
+    errorEl.textContent = '';
+    messageEl.textContent = 'Обновляю статус...';
 
-      renderUsers(data);
+    const { error } = await supabaseClient
+      .from('profiles')
+      .update({ status: newStatus })
+      .eq('id', MY_ID);
 
-      const me = data.find(user => user.id === MY_ID);
-      if (me) {
-        myNameEl.textContent = me.username;
-      } else {
-        myNameEl.textContent = 'Пользователь не найден';
-      }
+    if (error) {
+      console.error(error);
+      errorEl.textContent = 'Ошибка обновления статуса';
+      messageEl.textContent = '';
+      return;
     }
 
-    async function updateStatus(newStatus) {
-      errorEl.textContent = '';
-      messageEl.textContent = 'Обновляю статус...';
+    messageEl.textContent = 'Статус обновлён';
+    await loadUsers();
+  }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: newStatus })
-        .eq('id', MY_ID);
+  function enableRealtime() {
+    supabaseClient
+      .channel('profiles-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          loadUsers();
+        }
+      )
+      .subscribe();
+  }
 
-      if (error) {
-        console.error(error);
-        errorEl.textContent = 'Ошибка обновления статуса';
-        messageEl.textContent = '';
-        return;
-      }
-
-      messageEl.textContent = 'Статус обновлён';
-      await loadUsers();
-    }
-
-    function enableRealtime() {
-      supabase
-        .channel('profiles-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'profiles'
-          },
-          () => {
-            loadUsers();
-          }
-        )
-        .subscribe();
-    }
-
-    loadUsers();
-    enableRealtime();
-  </script>
+  loadUsers();
+  enableRealtime();
+</script>
 </body>
 </html>
