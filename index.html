@@ -222,8 +222,8 @@
 
   <script>
     const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
-    const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
+const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
+const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -296,7 +296,7 @@
       errorEl.textContent = '';
 
       const { data, error } = await supabase
-        .from('Тейбл')
+        .from('profiles')
         .select('*')
         .order('username', { ascending: true });
 
@@ -321,7 +321,7 @@
       messageEl.textContent = 'Обновляю статус...';
 
       const { error } = await supabase
-        .from('Тейбл')
+        .from('profiles')
         .update({ status: newStatus })
         .eq('id', MY_ID);
 
@@ -344,7 +344,7 @@
           {
             event: '*',
             schema: 'public',
-            table: 'Тейбл'
+            table: 'profiles'
           },
           () => {
             loadUsers();
