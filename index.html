@@ -198,6 +198,7 @@
 <body>
   <div class="wrapper">
     <div class="card">
+      <button onclick="signInWithGoogle()">Войти через Google</button>
       <h1 class="title">Мой профиль</h1>
       <p class="subtitle">Вы зашли как: <span id="my-name">Загрузка...</span></p>
 
@@ -221,7 +222,20 @@
   </div>
 
   <script>
-  const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
+  async function signInWithGoogle() {
+  const { data, error } = await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'https://narimankhankishiyev.github.io/Nariman0103/'
+    }
+  });
+
+  if (error) {
+    console.error(error);
+    alert('Ошибка входа через Google');
+  }
+}
+    const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
   const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
   const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
 
