@@ -49,39 +49,65 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+      margin-top: 10px;
     }
 
     .status-btn {
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 12px;
       font-size: 15px;
       font-weight: 700;
       color: white;
       cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
-    .status-btn:hover {
-      transform: translateY(-1px);
-      opacity: 0.95;
+    .study { background: #28a745; }
+    .coffee { background: #f4b400; color: #222; }
+    .game { background: #1aa6b7; }
+    .home { background: #6c757d; }
+
+    .danger-btn {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      background: #e63946;
+      margin-top: 14px;
+      margin-bottom: 14px;
     }
 
-    .study {
-      background: #28a745;
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
     }
 
-    .coffee {
-      background: #f4b400;
-      color: #222;
+    .google-btn {
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 600;
     }
 
-    .game {
-      background: #1aa6b7;
+    .session-box {
+      text-align: center;
+      margin: 14px 0;
     }
 
-    .home {
-      background: #6c757d;
+    .timer {
+      font-size: 22px;
+      font-weight: 700;
+      color: #2f80ed;
+      margin-top: 6px;
     }
 
     .group-title {
@@ -100,15 +126,6 @@
       display: flex;
       align-items: center;
       gap: 12px;
-    }
-
-    .avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: #ddd;
-      flex-shrink: 0;
     }
 
     .avatar-fallback {
@@ -148,29 +165,11 @@
       vertical-align: middle;
     }
 
-    .status-online {
-      background: #28a745;
-    }
-
-    .status-studying {
-      background: #28a745;
-    }
-
-    .status-coffee {
-      background: #f4b400;
-    }
-
-    .status-game {
-      background: #1aa6b7;
-    }
-
-    .status-home {
-      background: #6c757d;
-    }
-
-    .status-default {
-      background: #999;
-    }
+    .status-online, .status-studying { background: #28a745; }
+    .status-coffee { background: #f4b400; }
+    .status-game { background: #1aa6b7; }
+    .status-home { background: #6c757d; }
+    .status-default { background: #999; }
 
     .muted {
       color: #888;
@@ -183,30 +182,73 @@
       margin-top: 10px;
     }
 
-    @media (max-width: 520px) {
-      .title, .group-title {
-        font-size: 20px;
-      }
+    .chat-box {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      min-height: 180px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding: 12px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
 
-      .status-btn {
-        font-size: 14px;
-        padding: 11px;
-      }
+    .chat-message {
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .chat-name {
+      font-weight: 700;
+    }
+
+    .chat-form {
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    .send-btn {
+      border: none;
+      background: #42d392;
+      color: white;
+      border-radius: 8px;
+      padding: 0 18px;
+      font-weight: 700;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <div class="card">
-      <button onclick="signInWithGoogle()">Войти через Google</button>
+      <div class="top-actions">
+        <button class="google-btn" onclick="signInWithGoogle()">Войти через Google</button>
+      </div>
+
       <h1 class="title">Мой профиль</h1>
       <p class="subtitle">Вы зашли как: <span id="my-name">Загрузка...</span></p>
 
+      <div class="session-box">
+        <div>⏱ В сессии</div>
+        <div class="timer" id="session-timer">00:00:00</div>
+      </div>
+
+      <button class="danger-btn" onclick="signOut()">⛔ Завершить сессию</button>
+
       <div class="status-grid">
         <button class="status-btn study" onclick="updateStatus('Studying')">👨‍🎓 Учусь</button>
-        <button class="status-btn coffee" onclick="updateStatus('Coffee-break')">☕ Кофе</button>
+        <button class="status-btn coffee" onclick="updateStatus('Coffee-break')">☕ Перерыв</button>
         <button class="status-btn game" onclick="updateStatus('Gaming')">🎮 В игре</button>
-        <button class="status-btn home" onclick="updateStatus('At home')">🏠 Дома</button>
+        <button class="status-btn home" onclick="updateStatus('At home')">🚪 Выход</button>
       </div>
 
       <div id="message" class="muted" style="margin-top: 12px;"></div>
@@ -219,156 +261,266 @@
         <div class="muted">Загрузка списка...</div>
       </div>
     </div>
+
+    <div class="card">
+      <h2 class="group-title">💬 Общий чат</h2>
+      <div id="chat-messages" class="chat-box">
+        <div class="muted">Загрузка чата...</div>
+      </div>
+
+      <div class="chat-form">
+        <input id="chat-input" class="chat-input" type="text" placeholder="Сообщение..." />
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
   </div>
 
   <script>
-  async function signInWithGoogle() {
-  const { data, error } = await supabaseClient.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: 'https://narimankhankishiyev.github.io/Nariman0103/'
-    }
-  });
-
-  if (error) {
-    console.error(error);
-    alert('Ошибка входа через Google');
-  }
-}
     const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
-  const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
+    const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
+    const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
 
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const myNameEl = document.getElementById('my-name');
-  const usersEl = document.getElementById('users');
-  const messageEl = document.getElementById('message');
-  const errorEl = document.getElementById('error');
+    const myNameEl = document.getElementById('my-name');
+    const usersEl = document.getElementById('users');
+    const messageEl = document.getElementById('message');
+    const errorEl = document.getElementById('error');
+    const timerEl = document.getElementById('session-timer');
+    const chatMessagesEl = document.getElementById('chat-messages');
+    const chatInputEl = document.getElementById('chat-input');
 
-  function getStatusText(status) {
-    switch (status) {
-      case 'Studying':
-        return 'Учится';
-      case 'Coffee-break':
-        return 'Кофе-брейк';
-      case 'Gaming':
-        return 'В игре';
-      case 'At home':
-        return 'Дома';
-      case 'Online':
-        return 'Онлайн';
-      default:
-        return status || 'Без статуса';
-    }
-  }
+    let myUserName = 'Гость';
+    let sessionStart = Date.now();
 
-  function getStatusClass(status) {
-    switch (status) {
-      case 'Studying':
-        return 'status-studying';
-      case 'Coffee-break':
-        return 'status-coffee';
-      case 'Gaming':
-        return 'status-game';
-      case 'At home':
-        return 'status-home';
-      case 'Online':
-        return 'status-online';
-      default:
-        return 'status-default';
-    }
-  }
+    async function signInWithGoogle() {
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://narimankhankishiyev.github.io/Nariman0103/'
+        }
+      });
 
-  function renderAvatar(user) {
-    if (user.avatar_url) {
-      return `<img class="avatar" src="${user.avatar_url}" alt="${user.username}" />`;
-    }
-    return `<div class="avatar-fallback">👤</div>`;
-  }
-
-  function renderUsers(list) {
-    if (!list || list.length === 0) {
-      usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
-      return;
+      if (error) {
+        console.error(error);
+        alert('Ошибка входа через Google');
+      }
     }
 
-    usersEl.innerHTML = list.map(user => `
-      <div class="user-row">
-        ${renderAvatar(user)}
-        <div class="user-info">
-          <div class="username">${user.username || 'Без имени'}</div>
-          <div class="status-line">
-            <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
+    async function signOut() {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) {
+        console.error(error);
+        alert('Ошибка выхода');
+        return;
+      }
+
+      localStorage.removeItem('sessionStartTime');
+      window.location.reload();
+    }
+
+    function startSessionTimer() {
+      const savedStart = localStorage.getItem('sessionStartTime');
+      if (savedStart) {
+        sessionStart = Number(savedStart);
+      } else {
+        sessionStart = Date.now();
+        localStorage.setItem('sessionStartTime', String(sessionStart));
+      }
+
+      setInterval(() => {
+        const diff = Date.now() - sessionStart;
+        const totalSeconds = Math.floor(diff / 1000);
+
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+        timerEl.textContent = `${hours}:${minutes}:${seconds}`;
+      }, 1000);
+    }
+
+    function getStatusText(status) {
+      switch (status) {
+        case 'Studying': return 'Учится';
+        case 'Coffee-break': return 'Перерыв';
+        case 'Gaming': return 'В игре';
+        case 'At home': return 'Выход';
+        case 'Online': return 'Онлайн';
+        default: return status || 'Без статуса';
+      }
+    }
+
+    function getStatusClass(status) {
+      switch (status) {
+        case 'Studying': return 'status-studying';
+        case 'Coffee-break': return 'status-coffee';
+        case 'Gaming': return 'status-game';
+        case 'At home': return 'status-home';
+        case 'Online': return 'status-online';
+        default: return 'status-default';
+      }
+    }
+
+    function renderAvatar() {
+      return `<div class="avatar-fallback">👤</div>`;
+    }
+
+    function renderUsers(list) {
+      if (!list || list.length === 0) {
+        usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
+        return;
+      }
+
+      usersEl.innerHTML = list.map(user => `
+        <div class="user-row">
+          ${renderAvatar()}
+          <div class="user-info">
+            <div class="username">${user.username || 'Без имени'}</div>
+            <div class="status-line">
+              <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
-  }
-
-  async function loadUsers() {
-    errorEl.textContent = '';
-
-    const { data, error } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .order('username', { ascending: true });
-
-    if (error) {
-      console.error(error);
-      errorEl.textContent = 'Ошибка загрузки данных из Supabase';
-      return;
+      `).join('');
     }
 
-    renderUsers(data);
+    async function loadUsers() {
+      errorEl.textContent = '';
 
-    const me = data.find(user => user.id === MY_ID);
-    if (me) {
-      myNameEl.textContent = me.username;
-    } else {
-      myNameEl.textContent = 'Пользователь не найден';
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .order('username', { ascending: true });
+
+      if (error) {
+        console.error(error);
+        errorEl.textContent = 'Ошибка загрузки данных из Supabase';
+        return;
+      }
+
+      renderUsers(data);
+
+      const me = data.find(user => user.id === MY_ID);
+      if (me) {
+        myNameEl.textContent = me.username;
+        myUserName = me.username;
+      } else {
+        myNameEl.textContent = 'Пользователь не найден';
+      }
     }
-  }
 
-  async function updateStatus(newStatus) {
-    errorEl.textContent = '';
-    messageEl.textContent = 'Обновляю статус...';
+    async function updateStatus(newStatus) {
+      errorEl.textContent = '';
+      messageEl.textContent = 'Обновляю статус...';
 
-    const { error } = await supabaseClient
-      .from('profiles')
-      .update({ status: newStatus })
-      .eq('id', MY_ID);
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({ status: newStatus })
+        .eq('id', MY_ID);
 
-    if (error) {
-      console.error(error);
-      errorEl.textContent = 'Ошибка обновления статуса';
-      messageEl.textContent = '';
-      return;
+      if (error) {
+        console.error(error);
+        errorEl.textContent = 'Ошибка обновления статуса';
+        messageEl.textContent = '';
+        return;
+      }
+
+      messageEl.textContent = 'Статус обновлён';
+      await loadUsers();
     }
 
-    messageEl.textContent = 'Статус обновлён';
-    await loadUsers();
-  }
+    async function loadMessages() {
+      const { data, error } = await supabaseClient
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: true });
 
-  function enableRealtime() {
-    supabaseClient
-      .channel('profiles-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles'
-        },
-        () => {
-          loadUsers();
-        }
-      )
-      .subscribe();
-  }
+      if (error) {
+        console.error(error);
+        chatMessagesEl.innerHTML = '<div class="muted">Ошибка загрузки чата</div>';
+        return;
+      }
 
-  loadUsers();
-  enableRealtime();
-</script>
+      if (!data || data.length === 0) {
+        chatMessagesEl.innerHTML = '<div class="muted">Сообщений пока нет</div>';
+        return;
+      }
+
+      chatMessagesEl.innerHTML = data.map(msg => `
+        <div class="chat-message">
+          <span class="chat-name">${msg.user_name}:</span> ${msg.message}
+        </div>
+      `).join('');
+
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = chatInputEl.value.trim();
+      if (!text) return;
+
+      const { error } = await supabaseClient
+        .from('messages')
+        .insert([
+          {
+            user_name: myUserName,
+            message: text
+          }
+        ]);
+
+      if (error) {
+        console.error(error);
+        alert('Ошибка отправки сообщения');
+        return;
+      }
+
+      chatInputEl.value = '';
+      await loadMessages();
+    }
+
+    function enableRealtime() {
+      supabaseClient
+        .channel('profiles-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profiles'
+          },
+          () => {
+            loadUsers();
+          }
+        )
+        .subscribe();
+
+      supabaseClient
+        .channel('messages-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages'
+          },
+          () => {
+            loadMessages();
+          }
+        )
+        .subscribe();
+    }
+
+    chatInputEl.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    loadUsers();
+    loadMessages();
+    enableRealtime();
+    startSessionTimer();
+  </script>
 </body>
 </html>
