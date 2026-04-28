@@ -292,6 +292,7 @@
 
     let myUserName = 'Гость';
     let sessionStart = Date.now();
+    let currentSessionId = null;
 
     async function signInWithGoogle() {
       const { error } = await supabaseClient.auth.signInWithOAuth({
@@ -307,7 +308,76 @@
       }
     }
 
+    async function createSessionRecord() {
+      const existingSessionId = localStorage.getItem('currentSessionId');
+      const savedStart = localStorage.getItem('sessionStartTime');
+
+      if (existingSessionId && savedStart) {
+        currentSessionId = existingSessionId;
+        sessionStart = Number(savedStart);
+        return;
+      }
+
+      sessionStart = Date.now();
+      localStorage.setItem('sessionStartTime', String(sessionStart));
+
+      const startedAtIso = new Date(sessionStart).toISOString();
+
+      const { data, error } = await supabaseClient
+        .from('sessions')
+        .insert([
+          {
+            user_id: MY_ID,
+            username: myUserName,
+            started_at: startedAtIso,
+            is_active: true
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Ошибка создания сессии:', error);
+        return;
+      }
+
+      currentSessionId = data.id;
+      localStorage.setItem('currentSessionId', currentSessionId);
+    }
+
+    async function finishSessionRecord() {
+      const storedSessionId = localStorage.getItem('currentSessionId');
+      const storedStart = localStorage.getItem('sessionStartTime');
+
+      if (!storedSessionId || !storedStart) {
+        return;
+      }
+
+      const startMs = Number(storedStart);
+      const endMs = Date.now();
+      const durationSeconds = Math.floor((endMs - startMs) / 1000);
+
+      const { error } = await supabaseClient
+        .from('sessions')
+        .update({
+          ended_at: new Date(endMs).toISOString(),
+          duration_seconds: durationSeconds,
+          is_active: false
+        })
+        .eq('id', storedSessionId);
+
+      if (error) {
+        console.error('Ошибка завершения сессии:', error);
+      }
+
+      localStorage.removeItem('currentSessionId');
+      localStorage.removeItem('sessionStartTime');
+      currentSessionId = null;
+    }
+
     async function signOut() {
+      await finishSessionRecord();
+
       const { error } = await supabaseClient.auth.signOut();
       if (error) {
         console.error(error);
@@ -315,7 +385,6 @@
         return;
       }
 
-      localStorage.removeItem('sessionStartTime');
       window.location.reload();
     }
 
@@ -323,12 +392,9 @@
       const savedStart = localStorage.getItem('sessionStartTime');
       if (savedStart) {
         sessionStart = Number(savedStart);
-      } else {
-        sessionStart = Date.now();
-        localStorage.setItem('sessionStartTime', String(sessionStart));
       }
 
-      setInterval(() => {
+      function updateTimer() {
         const diff = Date.now() - sessionStart;
         const totalSeconds = Math.floor(diff / 1000);
 
@@ -337,7 +403,10 @@
         const seconds = String(totalSeconds % 60).padStart(2, '0');
 
         timerEl.textContent = `${hours}:${minutes}:${seconds}`;
-      }, 1000);
+      }
+
+      updateTimer();
+      setInterval(updateTimer, 1000);
     }
 
     function getStatusText(status) {
@@ -517,10 +586,15 @@
       }
     });
 
-    loadUsers();
-    loadMessages();
-    enableRealtime();
-    startSessionTimer();
+    async function initApp() {
+      await loadUsers();
+      await createSessionRecord();
+      startSessionTimer();
+      await loadMessages();
+      enableRealtime();
+    }
+
+    initApp();
   </script>
 </body>
 </html>
