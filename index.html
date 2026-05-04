@@ -275,326 +275,401 @@
     </div>
   </div>
 
-  <script>
-    const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
-    const MY_ID = "49ec9e48-4a31-498e-8e7e-9797771e657e";
+ <script>
+  const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
 
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const myNameEl = document.getElementById('my-name');
-    const usersEl = document.getElementById('users');
-    const messageEl = document.getElementById('message');
-    const errorEl = document.getElementById('error');
-    const timerEl = document.getElementById('session-timer');
-    const chatMessagesEl = document.getElementById('chat-messages');
-    const chatInputEl = document.getElementById('chat-input');
+  const myNameEl = document.getElementById('my-name');
+  const usersEl = document.getElementById('users');
+  const messageEl = document.getElementById('message');
+  const errorEl = document.getElementById('error');
+  const timerEl = document.getElementById('session-timer');
+  const chatMessagesEl = document.getElementById('chat-messages');
+  const chatInputEl = document.getElementById('chat-input');
 
-    let myUserName = 'Гость';
-    let sessionStart = Date.now();
-    let currentSessionId = null;
+  let currentUserId = null;
+  let myUserName = 'Гость';
+  let sessionStart = Date.now();
+  let currentSessionId = null;
 
-    async function signInWithGoogle() {
-      const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://narimankhankishiyev.github.io/Nariman0103/'
-        }
-      });
-
-      if (error) {
-        console.error(error);
-        alert('Ошибка входа через Google');
-      }
-    }
-
-    async function createSessionRecord() {
-      const existingSessionId = localStorage.getItem('currentSessionId');
-      const savedStart = localStorage.getItem('sessionStartTime');
-
-      if (existingSessionId && savedStart) {
-        currentSessionId = existingSessionId;
-        sessionStart = Number(savedStart);
-        return;
-      }
-
-      sessionStart = Date.now();
-      localStorage.setItem('sessionStartTime', String(sessionStart));
-
-      const startedAtIso = new Date(sessionStart).toISOString();
-
-      const { data, error } = await supabaseClient
-        .from('sessions')
-        .insert([
-          {
-            user_id: MY_ID,
-            username: myUserName,
-            started_at: startedAtIso,
-            is_active: true
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Ошибка создания сессии:', error);
-        return;
-      }
-
-      currentSessionId = data.id;
-      localStorage.setItem('currentSessionId', currentSessionId);
-    }
-
-    async function finishSessionRecord() {
-      const storedSessionId = localStorage.getItem('currentSessionId');
-      const storedStart = localStorage.getItem('sessionStartTime');
-
-      if (!storedSessionId || !storedStart) {
-        return;
-      }
-
-      const startMs = Number(storedStart);
-      const endMs = Date.now();
-      const durationSeconds = Math.floor((endMs - startMs) / 1000);
-
-      const { error } = await supabaseClient
-        .from('sessions')
-        .update({
-          ended_at: new Date(endMs).toISOString(),
-          duration_seconds: durationSeconds,
-          is_active: false
-        })
-        .eq('id', storedSessionId);
-
-      if (error) {
-        console.error('Ошибка завершения сессии:', error);
-      }
-
-      localStorage.removeItem('currentSessionId');
-      localStorage.removeItem('sessionStartTime');
-      currentSessionId = null;
-    }
-
-    async function signOut() {
-      await finishSessionRecord();
-
-      const { error } = await supabaseClient.auth.signOut();
-      if (error) {
-        console.error(error);
-        alert('Ошибка выхода');
-        return;
-      }
-
-      window.location.reload();
-    }
-
-    function startSessionTimer() {
-      const savedStart = localStorage.getItem('sessionStartTime');
-      if (savedStart) {
-        sessionStart = Number(savedStart);
-      }
-
-      function updateTimer() {
-        const diff = Date.now() - sessionStart;
-        const totalSeconds = Math.floor(diff / 1000);
-
-        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-        const seconds = String(totalSeconds % 60).padStart(2, '0');
-
-        timerEl.textContent = `${hours}:${minutes}:${seconds}`;
-      }
-
-      updateTimer();
-      setInterval(updateTimer, 1000);
-    }
-
-    function getStatusText(status) {
-      switch (status) {
-        case 'Studying': return 'Учится';
-        case 'Coffee-break': return 'Перерыв';
-        case 'Gaming': return 'В игре';
-        case 'At home': return 'Выход';
-        case 'Online': return 'Онлайн';
-        default: return status || 'Без статуса';
-      }
-    }
-
-    function getStatusClass(status) {
-      switch (status) {
-        case 'Studying': return 'status-studying';
-        case 'Coffee-break': return 'status-coffee';
-        case 'Gaming': return 'status-game';
-        case 'At home': return 'status-home';
-        case 'Online': return 'status-online';
-        default: return 'status-default';
-      }
-    }
-
-    function renderAvatar() {
-      return `<div class="avatar-fallback">👤</div>`;
-    }
-
-    function renderUsers(list) {
-      if (!list || list.length === 0) {
-        usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
-        return;
-      }
-
-      usersEl.innerHTML = list.map(user => `
-        <div class="user-row">
-          ${renderAvatar()}
-          <div class="user-info">
-            <div class="username">${user.username || 'Без имени'}</div>
-            <div class="status-line">
-              <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function loadUsers() {
-      errorEl.textContent = '';
-
-      const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .order('username', { ascending: true });
-
-      if (error) {
-        console.error(error);
-        errorEl.textContent = 'Ошибка загрузки данных из Supabase';
-        return;
-      }
-
-      renderUsers(data);
-
-      const me = data.find(user => user.id === MY_ID);
-      if (me) {
-        myNameEl.textContent = me.username;
-        myUserName = me.username;
-      } else {
-        myNameEl.textContent = 'Пользователь не найден';
-      }
-    }
-
-    async function updateStatus(newStatus) {
-      errorEl.textContent = '';
-      messageEl.textContent = 'Обновляю статус...';
-
-      const { error } = await supabaseClient
-        .from('profiles')
-        .update({ status: newStatus })
-        .eq('id', MY_ID);
-
-      if (error) {
-        console.error(error);
-        errorEl.textContent = 'Ошибка обновления статуса';
-        messageEl.textContent = '';
-        return;
-      }
-
-      messageEl.textContent = 'Статус обновлён';
-      await loadUsers();
-    }
-
-    async function loadMessages() {
-      const { data, error } = await supabaseClient
-        .from('messages')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error(error);
-        chatMessagesEl.innerHTML = '<div class="muted">Ошибка загрузки чата</div>';
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        chatMessagesEl.innerHTML = '<div class="muted">Сообщений пока нет</div>';
-        return;
-      }
-
-      chatMessagesEl.innerHTML = data.map(msg => `
-        <div class="chat-message">
-          <span class="chat-name">${msg.user_name}:</span> ${msg.message}
-        </div>
-      `).join('');
-
-      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-    }
-
-    async function sendMessage() {
-      const text = chatInputEl.value.trim();
-      if (!text) return;
-
-      const { error } = await supabaseClient
-        .from('messages')
-        .insert([
-          {
-            user_name: myUserName,
-            message: text
-          }
-        ]);
-
-      if (error) {
-        console.error(error);
-        alert('Ошибка отправки сообщения');
-        return;
-      }
-
-      chatInputEl.value = '';
-      await loadMessages();
-    }
-
-    function enableRealtime() {
-      supabaseClient
-        .channel('profiles-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'profiles'
-          },
-          () => {
-            loadUsers();
-          }
-        )
-        .subscribe();
-
-      supabaseClient
-        .channel('messages-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'messages'
-          },
-          () => {
-            loadMessages();
-          }
-        )
-        .subscribe();
-    }
-
-    chatInputEl.addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        sendMessage();
+  async function signInWithGoogle() {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://narimankhankishiyev.github.io/Nariman0103/'
       }
     });
 
-    async function initApp() {
-      await loadUsers();
-      await createSessionRecord();
-      startSessionTimer();
-      await loadMessages();
-      enableRealtime();
+    if (error) {
+      console.error(error);
+      alert('Ошибка входа через Google');
+    }
+  }
+
+  async function ensureCurrentUserProfile() {
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+
+    if (sessionError) {
+      console.error('Ошибка получения сессии:', sessionError);
+      return;
     }
 
-    initApp();
-  </script>
+    const user = sessionData?.session?.user;
+
+    if (!user) {
+      myNameEl.textContent = 'Гость';
+      return;
+    }
+
+    currentUserId = user.id;
+
+    const googleName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split('@')[0] ||
+      'Пользователь';
+
+    const { data: existingProfile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUserId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Ошибка проверки профиля:', profileError);
+      return;
+    }
+
+    if (!existingProfile) {
+      const { error: insertError } = await supabaseClient
+        .from('profiles')
+        .insert([
+          {
+            id: currentUserId,
+            username: googleName,
+            status: 'Online'
+          }
+        ]);
+
+      if (insertError) {
+        console.error('Ошибка создания профиля:', insertError);
+        return;
+      }
+
+      myUserName = googleName;
+      myNameEl.textContent = googleName;
+    } else {
+      myUserName = existingProfile.username || googleName;
+      myNameEl.textContent = myUserName;
+    }
+  }
+
+  async function createSessionRecord() {
+    if (!currentUserId) return;
+
+    const existingSessionId = localStorage.getItem('currentSessionId');
+    const savedStart = localStorage.getItem('sessionStartTime');
+    const savedSessionUserId = localStorage.getItem('sessionUserId');
+
+    if (existingSessionId && savedStart && savedSessionUserId === currentUserId) {
+      currentSessionId = existingSessionId;
+      sessionStart = Number(savedStart);
+      return;
+    }
+
+    localStorage.removeItem('currentSessionId');
+    localStorage.removeItem('sessionStartTime');
+    localStorage.removeItem('sessionUserId');
+
+    sessionStart = Date.now();
+    localStorage.setItem('sessionStartTime', String(sessionStart));
+    localStorage.setItem('sessionUserId', currentUserId);
+
+    const startedAtIso = new Date(sessionStart).toISOString();
+
+    const { data, error } = await supabaseClient
+      .from('sessions')
+      .insert([
+        {
+          user_id: currentUserId,
+          username: myUserName,
+          started_at: startedAtIso,
+          is_active: true
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Ошибка создания сессии:', error);
+      return;
+    }
+
+    currentSessionId = data.id;
+    localStorage.setItem('currentSessionId', currentSessionId);
+  }
+
+  async function finishSessionRecord() {
+    const storedSessionId = localStorage.getItem('currentSessionId');
+    const storedStart = localStorage.getItem('sessionStartTime');
+
+    if (!storedSessionId || !storedStart) {
+      return;
+    }
+
+    const startMs = Number(storedStart);
+    const endMs = Date.now();
+    const durationSeconds = Math.floor((endMs - startMs) / 1000);
+
+    const { error } = await supabaseClient
+      .from('sessions')
+      .update({
+        ended_at: new Date(endMs).toISOString(),
+        duration_seconds: durationSeconds,
+        is_active: false
+      })
+      .eq('id', storedSessionId);
+
+    if (error) {
+      console.error('Ошибка завершения сессии:', error);
+    }
+
+    localStorage.removeItem('currentSessionId');
+    localStorage.removeItem('sessionStartTime');
+    localStorage.removeItem('sessionUserId');
+    currentSessionId = null;
+  }
+
+  async function signOut() {
+    await finishSessionRecord();
+
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+      console.error(error);
+      alert('Ошибка выхода');
+      return;
+    }
+
+    window.location.reload();
+  }
+
+  function startSessionTimer() {
+    const savedStart = localStorage.getItem('sessionStartTime');
+    if (savedStart) {
+      sessionStart = Number(savedStart);
+    }
+
+    function updateTimer() {
+      const diff = Date.now() - sessionStart;
+      const totalSeconds = Math.floor(diff / 1000);
+
+      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+      const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+      timerEl.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    updateTimer();
+    setInterval(updateTimer, 1000);
+  }
+
+  function getStatusText(status) {
+    switch (status) {
+      case 'Studying': return 'Учится';
+      case 'Coffee-break': return 'Перерыв';
+      case 'Gaming': return 'В игре';
+      case 'At home': return 'Выход';
+      case 'Online': return 'Онлайн';
+      default: return status || 'Без статуса';
+    }
+  }
+
+  function getStatusClass(status) {
+    switch (status) {
+      case 'Studying': return 'status-studying';
+      case 'Coffee-break': return 'status-coffee';
+      case 'Gaming': return 'status-game';
+      case 'At home': return 'status-home';
+      case 'Online': return 'status-online';
+      default: return 'status-default';
+    }
+  }
+
+  function renderAvatar() {
+    return `<div class="avatar-fallback">👤</div>`;
+  }
+
+  function renderUsers(list) {
+    if (!list || list.length === 0) {
+      usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
+      return;
+    }
+
+    usersEl.innerHTML = list.map(user => `
+      <div class="user-row">
+        ${renderAvatar()}
+        <div class="user-info">
+          <div class="username">${user.username || 'Без имени'}</div>
+          <div class="status-line">
+            <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadUsers() {
+    errorEl.textContent = '';
+
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .order('username', { ascending: true });
+
+    if (error) {
+      console.error(error);
+      errorEl.textContent = 'Ошибка загрузки данных из Supabase';
+      return;
+    }
+
+    renderUsers(data);
+
+    const me = data.find(user => user.id === currentUserId);
+    if (me) {
+      myNameEl.textContent = me.username;
+      myUserName = me.username;
+    } else if (currentUserId) {
+      myNameEl.textContent = 'Пользователь не найден';
+    }
+  }
+
+  async function updateStatus(newStatus) {
+    errorEl.textContent = '';
+    messageEl.textContent = 'Обновляю статус...';
+
+    if (!currentUserId) {
+      errorEl.textContent = 'Сначала войдите через Google';
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from('profiles')
+      .update({ status: newStatus })
+      .eq('id', currentUserId);
+
+    if (error) {
+      console.error(error);
+      errorEl.textContent = 'Ошибка обновления статуса';
+      messageEl.textContent = '';
+      return;
+    }
+
+    messageEl.textContent = 'Статус обновлён';
+    await loadUsers();
+  }
+
+  async function loadMessages() {
+    const { data, error } = await supabaseClient
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error(error);
+      chatMessagesEl.innerHTML = '<div class="muted">Ошибка загрузки чата</div>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      chatMessagesEl.innerHTML = '<div class="muted">Сообщений пока нет</div>';
+      return;
+    }
+
+    chatMessagesEl.innerHTML = data.map(msg => `
+      <div class="chat-message">
+        <span class="chat-name">${msg.user_name}:</span> ${msg.message}
+      </div>
+    `).join('');
+
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const text = chatInputEl.value.trim();
+    if (!text) return;
+
+    const senderName = myUserName || 'Гость';
+
+    const { error } = await supabaseClient
+      .from('messages')
+      .insert([
+        {
+          user_name: senderName,
+          message: text
+        }
+      ]);
+
+    if (error) {
+      console.error(error);
+      alert('Ошибка отправки сообщения');
+      return;
+    }
+
+    chatInputEl.value = '';
+    await loadMessages();
+  }
+
+  function enableRealtime() {
+    supabaseClient
+      .channel('profiles-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          loadUsers();
+        }
+      )
+      .subscribe();
+
+    supabaseClient
+      .channel('messages-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages'
+        },
+        () => {
+          loadMessages();
+        }
+      )
+      .subscribe();
+  }
+
+  chatInputEl.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+
+  async function initApp() {
+    await ensureCurrentUserProfile();
+    await loadUsers();
+    await createSessionRecord();
+    startSessionTimer();
+    await loadMessages();
+    enableRealtime();
+  }
+
+  initApp();
+</script>
 </body>
 </html>
