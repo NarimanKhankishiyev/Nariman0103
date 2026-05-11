@@ -8,9 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -18,6 +16,42 @@
       background: #ececec;
       color: #222;
     }
+
+    /* --- НОВЫЙ БЛОК: СТИЛИ ДЛЯ СЛАЙДЕРА АЧИВОК --- */
+    .achievements-wrapper {
+      overflow-x: auto;
+      display: flex;
+      gap: 10px;
+      padding: 10px 5px;
+      scrollbar-width: thin;
+      background: #fdfdfd;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .achievement-card {
+      flex: 0 0 100px;
+      background: #f8f9fa;
+      border: 2px solid #eee;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      filter: grayscale(1); 
+      opacity: 0.4;
+      transition: all 0.3s ease;
+    }
+
+    .achievement-card.unlocked {
+      filter: grayscale(0);
+      opacity: 1;
+      border-color: #ffeeba;
+      background: #fff3cd;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .ach-emoji { font-size: 22px; display: block; }
+    .ach-name { font-size: 10px; font-weight: bold; margin-top: 5px; display: block; color: #555; }
+    /* ------------------------------------------- */
 
     .wrapper {
       max-width: 560px;
@@ -33,17 +67,8 @@
       margin-bottom: 18px;
     }
 
-    .title {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0 0 14px 0;
-    }
-
-    .subtitle {
-      font-size: 15px;
-      margin: 0 0 14px 0;
-      color: #444;
-    }
+    .title { font-size: 22px; font-weight: 700; margin: 0 0 14px 0; }
+    .subtitle { font-size: 15px; margin: 0 0 14px 0; color: #444; }
 
     .status-grid {
       display: grid;
@@ -98,71 +123,27 @@
       font-weight: 600;
     }
 
-    .session-box {
-      text-align: center;
-      margin: 14px 0;
-    }
+    .session-box { text-align: center; margin: 14px 0; }
+    .timer { font-size: 22px; font-weight: 700; color: #2f80ed; margin-top: 6px; }
 
-    .timer {
-      font-size: 22px;
-      font-weight: 700;
-      color: #2f80ed;
-      margin-top: 6px;
-    }
-
-    .group-title {
-      font-size: 21px;
-      font-weight: 700;
-      margin: 0 0 14px 0;
-    }
-
-    .user-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .user-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .group-title { font-size: 21px; font-weight: 700; margin: 18px 0 14px 0; }
+    .user-list { display: flex; flex-direction: column; gap: 12px; }
+    .user-row { display: flex; align-items: center; gap: 12px; }
 
     .avatar-fallback {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: #d9d9d9;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: #d9d9d9; display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
     }
 
-    .user-info {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .username {
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    .status-line {
-      font-size: 14px;
-      color: #666;
-    }
+    .user-info { display: flex; flex-direction: column; gap: 3px; }
+    .username { font-weight: 700; font-size: 15px; }
+    .status-line { font-size: 13px; color: #666; }
 
     .dot {
-      display: inline-block;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      margin-right: 7px;
-      vertical-align: middle;
+      display: inline-block; width: 9px; height: 9px;
+      border-radius: 50%; margin-right: 7px; vertical-align: middle;
     }
 
     .status-online, .status-studying { background: #28a745; }
@@ -171,60 +152,15 @@
     .status-home { background: #6c757d; }
     .status-default { background: #999; }
 
-    .muted {
-      color: #888;
-      font-size: 14px;
-    }
-
-    .error {
-      color: #b00020;
-      font-weight: 700;
-      margin-top: 10px;
-    }
-
+    .muted { color: #888; font-size: 14px; }
     .chat-box {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      min-height: 180px;
-      max-height: 260px;
-      overflow-y: auto;
-      padding: 12px;
-      margin-top: 12px;
-      margin-bottom: 12px;
-      background: #fafafa;
+      border: 1px solid #ddd; border-radius: 8px;
+      min-height: 180px; max-height: 260px; overflow-y: auto;
+      padding: 12px; margin: 12px 0; background: #fafafa;
     }
-
-    .chat-message {
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
-    .chat-name {
-      font-weight: 700;
-    }
-
-    .chat-form {
-      display: flex;
-      gap: 10px;
-    }
-
-    .chat-input {
-      flex: 1;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 14px;
-    }
-
-    .send-btn {
-      border: none;
-      background: #42d392;
-      color: white;
-      border-radius: 8px;
-      padding: 0 18px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .chat-form { display: flex; gap: 10px; }
+    .chat-input { flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 12px; }
+    .send-btn { border: none; background: #42d392; color: white; border-radius: 8px; padding: 0 18px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -240,9 +176,9 @@
       <div class="session-box">
         <div>⏱ В сессии</div>
         <div class="timer" id="session-timer">00:00:00</div>
-      <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Мои достижения:</p>
-<div id="my-achievements" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom: 15px; min-height: 24px;">
-  </div>
+        
+        <p style="font-size: 12px; color: #666; margin: 15px 0 5px 0; text-align: left;">Мои достижения (листай вправо →):</p>
+        <div id="my-achievements"></div>
       </div>
 
       <button class="danger-btn" onclick="signOut()">⛔ Завершить сессию</button>
@@ -253,27 +189,23 @@
         <button class="status-btn game" onclick="updateStatus('Gaming')">🎮 В игре</button>
         <button class="status-btn home" onclick="updateStatus('At home')">🚪 Выход</button>
       </div>
-
-      <div id="message" class="muted" style="margin-top: 12px;"></div>
-      <div id="error" class="error"></div>
     </div>
 
     <div class="card">
-      <h2 class="group-title">Монитор группы</h2>
+      <h2 class="title" style="font-size: 18px;">🏆 Рейтинг (ТОП-5)</h2>
+      <div id="leaderboard" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+        Загрузка рейтинга...
+      </div>
+
+      <h2 class="group-title">👥 Монитор группы</h2>
       <div id="users" class="user-list">
         <div class="muted">Загрузка списка...</div>
-      <h2 class="title" style="font-size: 18px;">🏆 Топ студентов (мин)</h2>
-<div id="leaderboard" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-  Загрузка рейтинга...
       </div>
     </div>
 
     <div class="card">
       <h2 class="group-title">💬 Общий чат</h2>
-      <div id="chat-messages" class="chat-box">
-        <div class="muted">Загрузка чата...</div>
-      </div>
-
+      <div id="chat-messages" class="chat-box"></div>
       <div class="chat-form">
         <input id="chat-input" class="chat-input" type="text" placeholder="Сообщение..." />
         <button class="send-btn" onclick="sendMessage()">➤</button>
@@ -284,10 +216,11 @@
 <script>
   const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
   const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
+  
   const ACHIEVEMENT_LIST = {
     early_bird: { name: "Ранняя пташка", emoji: "🌅", desc: "Зашел до 8:00" },
     marathoner: { name: "Марафонец", emoji: "🏃", desc: "Учился > 2 часов" },
-    activist: { name: "Активист", emoji: "📢", desc: "20+ сообщений в чате" },
+    activist: { name: "Активист", emoji: "📢", desc: "Активность в чате" },
     night_owl: { name: "Ночная сова", emoji: "🦉", desc: "Учеба после 23:00" },
     first_step: { name: "Первый шаг", emoji: "👣", desc: "Первая завершенная сессия" }
   };
@@ -296,8 +229,6 @@
 
   const myNameEl = document.getElementById('my-name');
   const usersEl = document.getElementById('users');
-  const messageEl = document.getElementById('message');
-  const errorEl = document.getElementById('error');
   const timerEl = document.getElementById('session-timer');
   const chatMessagesEl = document.getElementById('chat-messages');
   const chatInputEl = document.getElementById('chat-input');
@@ -307,51 +238,75 @@
   let sessionStart = Date.now();
   let currentSessionId = null;
 
-async function displayMyAchievements() {
-    if (!currentUserId) return;
-    
-    const container = document.getElementById('my-achievements');
-    if (!container) return;
-
-    // ВАЖНО: Используем 'achievements_og', как в базе данных
-    const { data, error } = await supabaseClient
-      .from('achievements_og') 
-      .select('achievement_type')
-      .eq('user_id', currentUserId);
-
-    if (error) {
-      console.error('Ошибка загрузки ачивок:', error);
-      return;
-    }
-
-    if (data && data.length > 0) {
-      // ОБНОВЛЕННЫЙ БЛОК:
-      container.innerHTML = data.map(a => {
-        const item = ACHIEVEMENT_LIST[a.achievement_type];
-        if (!item) return ''; 
-        return `<span title="${item.desc}" style="background:#fff3cd; border:1px solid #ffeeba; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold; color:#856404; margin-right:5px; display:inline-block; margin-bottom:5px;">${item.emoji} ${item.name}</span>`;
-      }).filter(html => html !== '').join(''); 
+  // 1. ОТОБРАЖЕНИЕ СЛАЙДЕРА ДОСТИЖЕНИЙ
+  async function displayMyAchievements() {
+      if (!currentUserId) return;
+      const container = document.getElementById('my-achievements');
       
-    } else {
-      container.innerHTML = '<span style="color:#aaa; font-size:12px;">Пока нет достижений</span>';
-    }
-}
-  async function updateLeaderboard() {
-    const { data } = await supabaseClient.from('profiles')
-      .select('username, total_study_time')
-      .order('total_study_time', { ascending: false }).limit(3);
-    
-    const lbEl = document.getElementById('leaderboard');
-    if (lbEl && data) {
-      lbEl.innerHTML = data.map((u, i) => {
-          const icons = ['🥇', '🥈', '🥉'];
-          const minutes = Math.floor((u.total_study_time || 0) / 60);
-          return `<div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-              <span>${icons[i]} ${u.username}</span>
-              <b>${minutes} мин</b>
-          </div>`;
+      const { data: earnedData } = await supabaseClient
+        .from('achievements_og')
+        .select('achievement_type')
+        .eq('user_id', currentUserId);
+
+      const earnedKeys = earnedData ? earnedData.map(a => a.achievement_type) : [];
+
+      container.className = "achievements-wrapper";
+      container.innerHTML = Object.keys(ACHIEVEMENT_LIST).map(key => {
+          const item = ACHIEVEMENT_LIST[key];
+          const isUnlocked = earnedKeys.includes(key);
+          return `
+            <div class="achievement-card ${isUnlocked ? 'unlocked' : ''}" title="${item.desc}">
+              <span class="ach-emoji">${item.emoji}</span>
+              <span class="ach-name">${item.name}</span>
+            </div>
+          `;
       }).join('');
-    }
+  }
+
+  // 2. ОБНОВЛЕННЫЙ ЛИДЕРБОРД
+  async function updateLeaderboard() {
+      const { data: profiles } = await supabaseClient.from('profiles')
+        .select('id, username, total_study_time')
+        .order('total_study_time', { ascending: false }).limit(5);
+        
+      const { data: allAch } = await supabaseClient.from('achievements_og').select('user_id');
+
+      const lbEl = document.getElementById('leaderboard');
+      if (lbEl && profiles) {
+        lbEl.innerHTML = profiles.map((u, i) => {
+            const icons = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+            const minutes = Math.floor((u.total_study_time || 0) / 60);
+            const achCount = allAch?.filter(a => a.user_id === u.id).length || 0;
+            
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; align-items:center;">
+                <span>${icons[i]} <b>${u.username}</b></span>
+                <span style="font-size:12px; color:#666;">🏆 ${achCount} | ⏱ ${minutes} мин</span>
+            </div>`;
+        }).join('');
+      }
+  }
+
+  // 3. РЕНДЕР ПОЛЬЗОВАТЕЛЕЙ С ЭМОДЗИ
+  async function renderUsers(list) {
+      if (!list || list.length === 0) return;
+
+      const { data: allAchievements } = await supabaseClient.from('achievements_og').select('*');
+
+      usersEl.innerHTML = list.map(user => {
+          const userAchievs = allAchievements?.filter(a => a.user_id === user.id) || [];
+          const emojis = userAchievs.map(a => ACHIEVEMENT_LIST[a.achievement_type]?.emoji || '').join(' ');
+
+          return `
+            <div class="user-row">
+              <div class="avatar-fallback">👤</div>
+              <div class="user-info">
+                <div class="username">${user.username || 'Аноним'} <span style="margin-left:5px;">${emojis}</span></div>
+                <div class="status-line">
+                  <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
+                </div>
+              </div>
+            </div>`;
+      }).join('');
   }
 
   async function checkAchievements(type, data = {}) {
@@ -376,84 +331,49 @@ async function displayMyAchievements() {
       if (!existing) {
         await supabaseClient.from('achievements_og').insert([{ user_id: currentUserId, achievement_type: earnedKey }]);
         displayMyAchievements();
+        updateLeaderboard();
       }
     }
   }
 
   async function signInWithGoogle() {
-    const { error } = await supabaseClient.auth.signInWithOAuth({
+    await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: 'https://narimankhankishiyev.github.io/Nariman0103/'
-      }
+      options: { redirectTo: window.location.href }
     });
-    if (error) alert('Ошибка входа через Google');
   }
 
   async function ensureCurrentUserProfile() {
     const { data: sessionData } = await supabaseClient.auth.getSession();
     const user = sessionData?.session?.user;
-    if (!user) {
-      myNameEl.textContent = 'Гость';
-      return;
-    }
-    currentUserId = user.id;
-    const googleName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Пользователь';
-    const { data: existingProfile } = await supabaseClient.from('profiles').select('*').eq('id', currentUserId).maybeSingle();
+    if (!user) return;
 
-    if (!existingProfile) {
-      await supabaseClient.from('profiles').insert([{ id: currentUserId, username: googleName, status: 'Online' }]);
-      myUserName = googleName;
-    } else {
-      myUserName = existingProfile.username || googleName;
+    currentUserId = user.id;
+    myUserName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Пользователь';
+    
+    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUserId).maybeSingle();
+    if (!profile) {
+      await supabaseClient.from('profiles').insert([{ id: currentUserId, username: myUserName, status: 'Online' }]);
     }
     myNameEl.textContent = myUserName;
   }
 
   async function createSessionRecord() {
     if (!currentUserId) return;
-    const existingSessionId = localStorage.getItem('currentSessionId');
-    const savedStart = localStorage.getItem('sessionStartTime');
-    if (existingSessionId && savedStart && localStorage.getItem('sessionUserId') === currentUserId) {
-      currentSessionId = existingSessionId;
-      sessionStart = Number(savedStart);
-      return;
-    }
     sessionStart = Date.now();
-    localStorage.setItem('sessionStartTime', String(sessionStart));
-    localStorage.setItem('sessionUserId', currentUserId);
-    const { data, error } = await supabaseClient.from('sessions').insert([{
-      user_id: currentUserId, username: myUserName, started_at: new Date(sessionStart).toISOString(), is_active: true
+    const { data } = await supabaseClient.from('sessions').insert([{
+      user_id: currentUserId, username: myUserName, started_at: new Date().toISOString(), is_active: true
     }]).select().single();
-    if (!error) {
-      currentSessionId = data.id;
-      localStorage.setItem('currentSessionId', currentSessionId);
-    }
+    if (data) currentSessionId = data.id;
   }
 
   async function finishSessionRecord() {
-    const storedSessionId = localStorage.getItem('currentSessionId');
-    const storedStart = localStorage.getItem('sessionStartTime');
-    if (!storedSessionId || !storedStart) return;
-
-    const durationSeconds = Math.floor((Date.now() - Number(storedStart)) / 1000);
-
-    const { data: profile } = await supabaseClient.from('profiles').select('total_study_time').eq('id', currentUserId).single();
-    const newTotal = (profile?.total_study_time || 0) + durationSeconds;
-    
-    await supabaseClient.from('profiles').update({ total_study_time: newTotal }).eq('id', currentUserId);
-    await supabaseClient.from('sessions').update({
-        ended_at: new Date().toISOString(),
-        duration_seconds: durationSeconds,
-        is_active: false
-      }).eq('id', storedSessionId);
-
-    await checkAchievements('session_end', { duration: durationSeconds });
-
-    localStorage.removeItem('currentSessionId');
-    localStorage.removeItem('sessionStartTime');
-    localStorage.removeItem('sessionUserId');
-    currentSessionId = null;
+    if (!currentSessionId) return;
+    const duration = Math.floor((Date.now() - sessionStart) / 1000);
+    const { data: p } = await supabaseClient.from('profiles').select('total_study_time').eq('id', currentUserId).single();
+    await supabaseClient.from('profiles').update({ total_study_time: (p?.total_study_time || 0) + duration }).eq('id', currentUserId);
+    await supabaseClient.from('sessions').update({ ended_at: new Date().toISOString(), duration_seconds: duration, is_active: false }).eq('id', currentSessionId);
+    await checkAchievements('session_end', { duration });
   }
 
   async function signOut() {
@@ -463,92 +383,72 @@ async function displayMyAchievements() {
   }
 
   function startSessionTimer() {
-    const updateTimer = () => {
+    setInterval(() => {
       const diff = Date.now() - sessionStart;
-      const totalSeconds = Math.floor(diff / 1000);
-      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-      const seconds = String(totalSeconds % 60).padStart(2, '0');
-      timerEl.textContent = `${hours}:${minutes}:${seconds}`;
-    };
-    updateTimer();
-    setInterval(updateTimer, 1000);
+      const sec = Math.floor(diff / 1000);
+      timerEl.textContent = new Date(sec * 1000).toISOString().substr(11, 8);
+    }, 1000);
   }
 
-  function getStatusText(status) {
-    const map = {'Studying':'Учится','Coffee-break':'Перерыв','Gaming':'В игре','At home':'Выход','Online':'Онлайн'};
-    return map[status] || status || 'Без статуса';
+  function getStatusText(s) {
+    const m = {'Studying':'Учится','Coffee-break':'Перерыв','Gaming':'В игре','At home':'Выход','Online':'Онлайн'};
+    return m[s] || 'Онлайн';
   }
 
-  function getStatusClass(status) {
-    const map = {'Studying':'status-studying','Coffee-break':'status-coffee','Gaming':'status-game','At home':'status-home','Online':'status-online'};
-    return map[status] || 'status-default';
-  }
-
-  function renderUsers(list) {
-    if (!list || list.length === 0) {
-      usersEl.innerHTML = '<div class="muted">Пользователей пока нет</div>';
-      return;
-    }
-    usersEl.innerHTML = list.map(user => `
-      <div class="user-row">
-        <div class="avatar-fallback">👤</div>
-        <div class="user-info">
-          <div class="username">${user.username || 'Без имени'}</div>
-          <div class="status-line">
-            <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
-          </div>
-        </div>
-      </div>`).join('');
+  function getStatusClass(s) {
+    const m = {'Studying':'status-studying','Coffee-break':'status-coffee','Gaming':'status-game','At home':'status-home'};
+    return m[s] || 'status-online';
   }
 
   async function loadUsers() {
-    const { data } = await supabaseClient.from('profiles').select('*').order('username', { ascending: true });
+    const { data } = await supabaseClient.from('profiles').select('*').order('username');
     if (data) renderUsers(data);
   }
 
-  async function updateStatus(newStatus) {
+  async function updateStatus(s) {
     if (!currentUserId) return;
-    await supabaseClient.from('profiles').update({ status: newStatus }).eq('id', currentUserId);
+    await supabaseClient.from('profiles').update({ status: s }).eq('id', currentUserId);
     loadUsers();
   }
 
   async function loadMessages() {
     const { data } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: true });
     if (data) {
-      chatMessagesEl.innerHTML = data.map(msg => `
-        <div class="chat-message"><span class="chat-name">${msg.user_name}:</span> ${msg.message}</div>
-      `).join('');
+      chatMessagesEl.innerHTML = data.map(m => `<div class="chat-message"><b>${m.user_name}:</b> ${m.message}</div>`).join('');
       chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
     }
   }
 
   async function sendMessage() {
-    const text = chatInputEl.value.trim();
-    if (!text) return;
-    await supabaseClient.from('messages').insert([{ user_name: myUserName, message: text }]);
+    const t = chatInputEl.value.trim();
+    if (!t) return;
+    await supabaseClient.from('messages').insert([{ user_name: myUserName, message: t }]);
     chatInputEl.value = '';
     loadMessages();
   }
 
-  function enableRealtime() {
-    supabaseClient.channel('profiles-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadUsers()).subscribe();
-    supabaseClient.channel('messages-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => loadMessages()).subscribe();
-  }
-
-  chatInputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-
   async function initApp() {
     await ensureCurrentUserProfile();
     await loadUsers();
-    await createSessionRecord();
-    startSessionTimer();
-    await loadMessages();
-    enableRealtime();
-    displayMyAchievements();
+    if (currentUserId) {
+      await createSessionRecord();
+      startSessionTimer();
+      displayMyAchievements();
+      checkAchievements('login');
+    }
     updateLeaderboard();
-    checkAchievements('login');
+    loadMessages();
+    
+    // Реалтайм
+    supabaseClient.channel('any').on('postgres_changes', { event: '*', schema: 'public' }, () => {
+      loadUsers();
+      loadMessages();
+      updateLeaderboard();
+    }).subscribe();
   }
 
+  chatInputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
   initApp();
 </script>
+</body>
+</html>
