@@ -307,14 +307,15 @@
   let sessionStart = Date.now();
   let currentSessionId = null;
 
- async function displayMyAchievements() {
+async function displayMyAchievements() {
     if (!currentUserId) return;
     
     const container = document.getElementById('my-achievements');
     if (!container) return;
 
+    // ВАЖНО: Используем 'achievements_og', как в базе данных
     const { data, error } = await supabaseClient
-      .from('achievements_og')
+      .from('achievements_og') 
       .select('achievement_type')
       .eq('user_id', currentUserId);
 
@@ -324,7 +325,8 @@
     }
 
     if (data && data.length > 0) {
-     container.innerHTML = data.map(a => {
+      // ОБНОВЛЕННЫЙ БЛОК:
+      container.innerHTML = data.map(a => {
         const item = ACHIEVEMENT_LIST[a.achievement_type];
         if (!item) return ''; 
         return `<span title="${item.desc}" style="background:#fff3cd; border:1px solid #ffeeba; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold; color:#856404; margin-right:5px; display:inline-block; margin-bottom:5px;">${item.emoji} ${item.name}</span>`;
