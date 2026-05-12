@@ -321,19 +321,29 @@ async function sendFeedback() {
         alert("Пожалуйста, напишите текст отзыва перед отправкой.");
         return;
     }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const userId = session?.user?.id || currentUserId;
+    const userName = session?.user?.user_metadata?.full_name || myUserName || "Аноним";
+
+    if (!userId) {
+        alert("Ошибка: Чтобы оставить отзыв, нужно войти через Google!");
+        return;
+    }
+
     const { error } = await supabaseClient
         .from('feedbacks')
         .insert([
             { 
-                user_id: currentUserId,   // ID текущего пользователя
-                username: myUserName,     // Имя пользователя
-                message: feedbackText     // Текст отзыва
+                user_id: userId,
+                username: userName,
+                message: feedbackText
             }
         ]);
 
     if (error) {
         console.error("Ошибка при отправке отзыва:", error);
-        alert("Произошла ошибка при отправке. Проверьте консоль.");
+        alert("Ошибка 401: Скорее всего, ваша сессия истекла. Попробуйте перезайти.");
     } else {
         alert("Ваш отзыв успешно отправлен! Спасибо.");
         toggleFb(false);
