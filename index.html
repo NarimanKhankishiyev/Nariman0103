@@ -321,7 +321,6 @@ function toggleFb(show) {
     if (overlay) {
         overlay.style.display = show ? 'block' : 'none';
     }
-    // Очищаем текст при закрытии
     if (!show) {
         document.getElementById('fb-text').value = '';
     }
@@ -437,20 +436,23 @@ async function sendFeedback() {
           const emojis = userAchievs.map(a => ACHIEVEMENT_LIST[a.achievement_type]?.emoji || '').join(' ');
 
           return `
-            <div class="user-row">
-              <div class="avatar-fallback">👤</div>
-              <div class="user-info">
-                <div class="username">${user.username || 'Аноним'} <span style="margin-left:5px;">${emojis}</span></div>
-                <div class="status-line">
-                  <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
+            <div class="user-row" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="avatar-fallback">👤</div>
+                <div class="user-info">
+                  <div class="username">${user.username || 'Аноним'} <span style="margin-left:5px;">${emojis}</span></div>
+                  <div class="status-line">
+                    <span class="dot ${getStatusClass(user.status)}"></span>${getStatusText(user.status)}
+                  </div>
                 </div>
               </div>
+              <button onclick="openReportModal('${user.username}')" 
+                      style="background:none; border:none; cursor:pointer; font-size:16px; opacity:0.6; padding: 5px;" 
+                      title="Пожаловаться">🚩</button>
             </div>`;
       }).join('');
   }
-let userToReport = ""; // Переменная для хранения имени нарушителя
-
-// Открыть окно жалобы
+let userToReport = "";
 function openReportModal(targetName) {
     userToReport = targetName;
     document.getElementById('target-user-name').textContent = targetName;
@@ -461,8 +463,6 @@ function toggleReport(show) {
     document.getElementById('report-overlay').style.display = show ? 'block' : 'none';
     if(!show) document.getElementById('report-text').value = '';
 }
-
-// Отправка жалобы в базу
 async function sendReport() {
     const reason = document.getElementById('report-text').value.trim();
     if (!reason) return alert("Опишите причину жалобы");
