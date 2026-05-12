@@ -16,8 +16,6 @@
       background: #ececec;
       color: #222;
     }
-
-    /* --- НОВЫЙ БЛОК: СТИЛИ ДЛЯ СЛАЙДЕРА АЧИВОК --- */
     .achievements-wrapper {
       overflow-x: auto;
       display: flex;
@@ -28,7 +26,82 @@
       border-radius: 8px;
       margin-bottom: 15px;
     }
+.achievements-wrapper {
+  overflow-x: auto;
+  display: flex;
+  gap: 10px;
+  padding: 10px 5px;
+  scrollbar-width: thin;
+  background: #fdfdfd;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
 
+.achievement-card {
+  flex: 0 0 100px;
+  background: #f8f9fa;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  filter: grayscale(1); 
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.achievement-card.unlocked {
+  filter: grayscale(0);
+  opacity: 1;
+  border-color: #ffeeba;
+  background: #fff3cd;
+}
+
+/* --- Кнопка и Окно отзывов --- */
+.feedback-tab {
+  position: fixed;
+  right: -38px;
+  top: 50%;
+  transform: rotate(-90deg);
+  background: #333;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  z-index: 1000;
+  font-weight: bold;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+}
+
+.feedback-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.feedback-modal textarea {
+  width: 100%;
+  height: 100px;
+  margin: 15px 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  font-family: Arial, sans-serif;
+}
     .achievement-card {
       flex: 0 0 100px;
       background: #f8f9fa;
@@ -164,6 +237,19 @@
   </style>
 </head>
 <body>
+  <div class="feedback-tab" onclick="toggleFb(true)">Оставить отзыв</div>
+
+<div id="fb-overlay" class="modal-overlay">
+  <div class="feedback-modal">
+    <h3 style="margin:0;">📝 Оставить отзыв</h3>
+    <p style="font-size: 12px; color: #666;">Ваш отзыв будет виден только администратору в базе Supabase.</p>
+    <textarea id="fb-text" placeholder="Напишите о баге или предложении..."></textarea>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="sendFeedback()" style="flex:1; background:#28a745; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;">Отправить</button>
+      <button onclick="toggleFb(false)" style="flex:1; background:#eee; border:none; padding:10px; border-radius:8px; cursor:pointer;">Отмена</button>
+    </div>
+  </div>
+</div>
   <div class="wrapper">
     <div class="card">
       <div class="top-actions">
@@ -214,6 +300,40 @@
   </div>
 
 <script>
+function toggleFb(show) {
+    const overlay = document.getElementById('fb-overlay');
+    if (overlay) {
+        overlay.style.display = show ? 'block' : 'none';
+    }
+    // Очищаем текст при закрытии
+    if (!show) {
+        document.getElementById('fb-text').value = '';
+    }
+}
+async function sendFeedback() {
+    const feedbackText = document.getElementById('fb-text').value.trim();
+    if (!feedbackText) {
+        alert("Пожалуйста, напишите текст отзыва перед отправкой.");
+        return;
+    }
+    const { error } = await supabaseClient
+        .from('feedbacks')
+        .insert([
+            { 
+                user_id: currentUserId,   // ID текущего пользователя
+                username: myUserName,     // Имя пользователя
+                message: feedbackText     // Текст отзыва
+            }
+        ]);
+
+    if (error) {
+        console.error("Ошибка при отправке отзыва:", error);
+        alert("Произошла ошибка при отправке. Проверьте консоль.");
+    } else {
+        alert("Ваш отзыв успешно отправлен! Спасибо.");
+        toggleFb(false);
+    }
+}
   const SUPABASE_URL = "https://yzlbmvjjckuyjdotrapi.supabase.co";
   const SUPABASE_KEY = "sb_publishable_KL0IyDTMgDPw36EYuRKIKg_bXpdtZ85";
   
@@ -237,8 +357,6 @@
   let myUserName = 'Гость';
   let sessionStart = Date.now();
   let currentSessionId = null;
-
-  // 1. ОТОБРАЖЕНИЕ СЛАЙДЕРА ДОСТИЖЕНИЙ
   async function displayMyAchievements() {
       if (!currentUserId) return;
       const container = document.getElementById('my-achievements');
@@ -262,8 +380,6 @@
           `;
       }).join('');
   }
-
-  // 2. ОБНОВЛЕННЫЙ ЛИДЕРБОРД
   async function updateLeaderboard() {
       const { data: profiles } = await supabaseClient.from('profiles')
         .select('id, username, total_study_time')
@@ -285,8 +401,6 @@
         }).join('');
       }
   }
-
-  // 3. РЕНДЕР ПОЛЬЗОВАТЕЛЕЙ С ЭМОДЗИ
   async function renderUsers(list) {
       if (!list || list.length === 0) return;
 
@@ -438,8 +552,6 @@
     }
     updateLeaderboard();
     loadMessages();
-    
-    // Реалтайм
     supabaseClient.channel('any').on('postgres_changes', { event: '*', schema: 'public' }, () => {
       loadUsers();
       loadMessages();
