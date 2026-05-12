@@ -243,8 +243,19 @@
 </head>
 <body>
   <div class="feedback-tab" onclick="toggleFb(true)">Оставить отзыв</div>
+<div id="report-overlay" class="modal-overlay">
+  <div class="feedback-modal" style="border-top: 5px solid #e63946;">
+    <h3 style="margin:0;">🚩 Подать жалобу</h3>
+    <p style="font-size: 12px; color: #666;">Укажите причину жалобы на пользователя: <b id="target-user-name"></b></p>
+    <textarea id="report-text" placeholder="Что нарушил этот пользователь?"></textarea>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="sendReport()" style="flex:1; background:#e63946; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;">Пожаловаться</button>
+      <button onclick="toggleReport(false)" style="flex:1; background:#eee; border:none; padding:10px; border-radius:8px; cursor:pointer;">Отмена</button>
+    </div>
+  </div>
+</div>
 
-<div id="fb-overlay" class="modal-overlay">
+  <div id="fb-overlay" class="modal-overlay">
   <div class="feedback-modal">
     <h3 style="margin:0;">📝 Оставить отзыв</h3>
     <p style="font-size: 12px; color: #666;">Ваш отзыв будет виден только администратору в базе Supabase.</p>
@@ -437,7 +448,44 @@ async function sendFeedback() {
             </div>`;
       }).join('');
   }
+let userToReport = ""; // Переменная для хранения имени нарушителя
 
+// Открыть окно жалобы
+function openReportModal(targetName) {
+    userToReport = targetName;
+    document.getElementById('target-user-name').textContent = targetName;
+    document.getElementById('report-overlay').style.display = 'block';
+}
+
+function toggleReport(show) {
+    document.getElementById('report-overlay').style.display = show ? 'block' : 'none';
+    if(!show) document.getElementById('report-text').value = '';
+}
+
+// Отправка жалобы в базу
+async function sendReport() {
+    const reason = document.getElementById('report-text').value.trim();
+    if (!reason) return alert("Опишите причину жалобы");
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const myName = session?.user?.user_metadata?.full_name || myUserName;
+
+    const { error } = await supabaseClient
+        .from('reports')
+        .insert([{ 
+            from_user: myName, 
+            reported_user: userToReport, 
+            reason: reason 
+        }]);
+
+    if (!error) {
+        alert("Жалоба принята. Администратор рассмотрит её в ближайшее время.");
+        toggleReport(false);
+    } else {
+        alert("Ошибка: " + error.message);
+    }
+}
+  
   async function checkAchievements(type, data = {}) {
     if (!currentUserId) return;
     let earnedKey = null;
